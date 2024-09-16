@@ -10,6 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 type Commit struct {
@@ -232,8 +235,22 @@ func convertLexicons() error {
 	return nil
 }
 
-func convertJSONToKotlin() error {
-	return nil
+func convertJSONToKotlin(jsonFilePath, outputDir string) error {
+	jsonData, err := os.ReadFile(jsonFilePath)
+	if err != nil {
+		return err
+	}
+
+	var data map[string]interface{}
+	if err := json.Unmarshal(jsonData, &data); err != nil {
+		return err
+	}
+
+	className := cases.Title(language.Und).String(strings.TrimSuffix(filepath.Base(jsonFilePath), ".json"))
+	kotlinCode := generateKotlinClass(className, data)
+
+	outputFilePath := filepath.Join(outputDir, className+".kt")
+	return os.WriteFile(outputFilePath, []byte(kotlinCode), 0644)
 }
 
 func generateKotlinClass(className string, data map[string]interface{}) string {
