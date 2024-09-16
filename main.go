@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -53,15 +54,15 @@ func main() {
 				break
 			}
 
-			for _, file := range commit.Files {
-				if file.Filename == filePath {
-					fmt.Println("File has been changed")
-					pullRepo()
-					// TO-DO
-					// convertLexicons()
-					pushRepo()
-				}
-			}
+			// for _, file := range commit.Files {
+			// 	if file.Filename == filePath {
+			// 		fmt.Println("File has been changed")
+			// 		pullRepo()
+			// 		// TO-DO
+			// 		// convertLexicons()
+			// 		pushRepo()
+			// 	}
+			// }
 		}
 
 		if len(commits) > 0 {
@@ -142,11 +143,30 @@ func pushRepo() error {
 	}
 
 	// Add, commit, and push changes
-	//if err := COMMIT/PUSH function; err != nil {
-	//return err
-	//}
+	if err := gitCommitAndPush(targetRepoDir, authRepoURL); err != nil {
+		return err
+	}
 
 	return nil
+}
+
+func gitCommitAndPush(dir, repoURL string) error {
+	cmd := exec.Command("git", "-C", dir, "add", ".")
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+
+	cmd = exec.Command("git", "-C", dir, "commit", "-m", "Syncing new lexicon files")
+	if err := cmd.Run(); err != nil {
+		if strings.Contains(err.Error(), "nothing to commit") {
+			fmt.Println("No changes to commit.")
+			return nil
+		}
+		return err
+	}
+
+	cmd = exec.Command("git", "-C", dir, "push", repoURL)
+	return cmd.Run()
 }
 
 // Helper functions
@@ -186,32 +206,6 @@ func copyFile(src, dest string) error {
 
 	return os.WriteFile(dest, input, 0644)
 }
-
-// func pushRepo() {
-// 	token := os.Getenv("GITHUB_TOKEN")
-// 	if token == "" {
-// 		log.Fatal("GITHUB_TOKEN is not set")
-// 	}
-
-// 	os.Setenv("GIT_ASKPASS", "echo "+token)
-
-// 	// TO-DO: Add the new files to the repo
-// 	// repo/kotlin-lexicons/* -> https://github.com/morpho-app/Morpho/tree/main/app/src/main/java/app/morpho/lexicons
-
-// 	cmd := exec.Command("git", "commit", "-m", "Syncing new lexicon files")
-// 	cmd.Dir = ""
-// 	err := cmd.Run()
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	cmd = exec.Command("git", "push")
-// 	cmd.Dir = ""
-// 	err = cmd.Run()
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// }
 
 func convertLexicons() {
 	// TO-DO: Convert the downloaded lexicon json files to Kotlin data classes
