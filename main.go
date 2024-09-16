@@ -12,19 +12,17 @@ import (
 )
 
 type Commit struct {
-	Sha    string `json:"sha"`
-	Commit struct {
-		Message string `json:"message"`
-	} `json:"commit"`
-	Files []struct {
-		Filename string `json:"filename"`
-	} `json:"files"`
+	Sha string `json:"sha"`
 }
 
-const owner = "bluesky-social"
-const repoName = "atproto"
-const filePath = "atproto/tree/main/lexicons"
-const repoLocation = "https://github.com/bluesky-social/atproto/tree/main/lexicons"
+const (
+	owner         = "bluesky-social"
+	repoName      = "atproto"
+	repoURL       = "https://github.com/bluesky-social/atproto.git"
+	repoDir       = "/tree/main/lexicons"
+	targetRepoURL = "https://github.com/morpho-app/Morpho.git"
+	targetRepoDir = "tbd"
+)
 
 func main() {
 	var lastCommitSha string
