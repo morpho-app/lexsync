@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -33,47 +32,36 @@ func main() {
 	var lastCommitSha string
 
 	for {
-		resp, err := http.Get(fmt.Sprintf("https://api.github.com/repos/%s/%s/commits", owner, repoName))
+		latestCommitSha, err := getLatestCommitSha()
 		if err != nil {
-			fmt.Println(err)
-			return
+			log.Println("Error fetching latest commit SHA:", err)
+			time.Sleep(1 * time.Hour)
+			continue
 		}
 
-		body, err := io.ReadAll(resp.Body)
-		resp.Body.Close()
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		var commits []Commit
-		err = json.Unmarshal(body, &commits)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		for _, commit := range commits {
-			if commit.Sha == lastCommitSha {
-				break
+		if latestCommitSha != lastCommitSha {
+			fmt.Println("Lexicons directory has been changed")
+			if err := pullRepo(); err != nil {
+				log.Println("Error pulling repository:", err)
+				continue
 			}
 
-			// for _, file := range commit.Files {
-			// 	if file.Filename == filePath {
-			// 		fmt.Println("File has been changed")
-			// 		pullRepo()
-			// 		// TO-DO
-			// 		// convertLexicons()
-			// 		pushRepo()
-			// 	}
-			// }
+			if err := convertLexicons(); err != nil {
+				log.Println("Error converting lexicons:", err)
+				continue
+			}
+
+			if err := pushRepo(); err != nil {
+				log.Println("Error pushing to repository:", err)
+				continue
+			}
+
+			lastCommitSha = latestCommitSha
+		} else {
+			fmt.Println("No new changes")
 		}
 
-		if len(commits) > 0 {
-			lastCommitSha = commits[0].Sha
-		}
-
-		// Wait for a while before checking again
+		// Wait for a day before checking again
 		time.Sleep(24 * time.Hour)
 	}
 }
