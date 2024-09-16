@@ -92,15 +92,18 @@ func getLatestCommitSha() (string, error) {
 	return commits[0].Sha, nil
 }
 
-func pullRepo() {
-	repoURL := repoLocation
-	destPath := "/lexsync/repo"
-
-	cmd := exec.Command("git", "clone", repoURL, destPath)
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
+func pullRepo() error {
+	if _, err := os.Stat(repoDir); os.IsNotExist(err) {
+		// Clone the repository if it doesn't exist
+		fmt.Println("Cloning repository...")
+		cmd := exec.Command("git", "clone", repoURL, repoDir)
+		return cmd.Run()
 	}
+
+	// Pull the latest changes
+	fmt.Println("Pulling latest changes...")
+	cmd := exec.Command("git", "-C", repoDir, "pull")
+	return cmd.Run()
 }
 
 func pushRepo() {
