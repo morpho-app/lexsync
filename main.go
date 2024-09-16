@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"time"
 )
 
@@ -106,31 +106,112 @@ func pullRepo() error {
 	return cmd.Run()
 }
 
-func pushRepo() {
+func pushRepo() error {
 	token := os.Getenv("GITHUB_TOKEN")
 	if token == "" {
-		log.Fatal("GITHUB_TOKEN is not set")
+		return fmt.Errorf("GITHUB_TOKEN is not set")
 	}
 
-	os.Setenv("GIT_ASKPASS", "echo "+token)
+	authRepoURL := fmt.Sprintf("https://%s@github.com/morpho-app/Morpho.git", token)
 
-	// TO-DO: Add the new files to the repo
-	// repo/kotlin-lexicons/* -> https://github.com/morpho-app/Morpho/tree/main/app/src/main/java/app/morpho/lexicons
-
-	cmd := exec.Command("git", "commit", "-m", "Syncing new lexicon files")
-	cmd.Dir = ""
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
+	if _, err := os.Stat(targetRepoDir); os.IsNotExist(err) {
+		// Clone the target repository if it doesn't exist
+		fmt.Println("Cloning target repository...")
+		cmd := exec.Command("git", "clone", authRepoURL, targetRepoDir)
+		if err := cmd.Run(); err != nil {
+			return err
+		}
+	} else {
+		// Pull the latest changes
+		fmt.Println("Pulling latest changes in target repository...")
+		cmd := exec.Command("git", "-C", targetRepoDir, "pull")
+		if err := cmd.Run(); err != nil {
+			return err
+		}
 	}
 
-	cmd = exec.Command("git", "push")
-	cmd.Dir = ""
-	err = cmd.Run()
-	if err != nil {
-		log.Fatal(err)
+	// Copy the generated Kotlin files to the target repository
+	sourceDir := "/lexsync/generated-kotlin"
+	// TODO: Double check target repo dir
+	destDir := filepath.Join(targetRepoDir, "")
+	if err := os.MkdirAll(destDir, 0755); err != nil {
+		return err
 	}
+	if err := copyDir(sourceDir, destDir); err != nil {
+		return err
+	}
+
+	// Add, commit, and push changes
+	//if err := COMMIT/PUSH function; err != nil {
+	//return err
+	//}
+
+	return nil
 }
+
+// Helper functions
+func copyDir(src, dest string) error {
+	entries, err := os.ReadDir(src)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range entries {
+		srcPath := filepath.Join(src, entry.Name())
+		destPath := filepath.Join(dest, entry.Name())
+
+		if entry.IsDir() {
+			if err := copyDir(srcPath, destPath); err != nil {
+				return err
+			}
+		} else {
+			if err := copyFile(srcPath, destPath); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func copyFile(src, dest string) error {
+	input, err := os.ReadFile(src)
+	if err != nil {
+		return err
+	}
+
+	if err := os.MkdirAll(filepath.Dir(dest), 0755); err != nil {
+		return err
+	}
+
+	return os.WriteFile(dest, input, 0644)
+}
+
+// func pushRepo() {
+// 	token := os.Getenv("GITHUB_TOKEN")
+// 	if token == "" {
+// 		log.Fatal("GITHUB_TOKEN is not set")
+// 	}
+
+// 	os.Setenv("GIT_ASKPASS", "echo "+token)
+
+// 	// TO-DO: Add the new files to the repo
+// 	// repo/kotlin-lexicons/* -> https://github.com/morpho-app/Morpho/tree/main/app/src/main/java/app/morpho/lexicons
+
+// 	cmd := exec.Command("git", "commit", "-m", "Syncing new lexicon files")
+// 	cmd.Dir = ""
+// 	err := cmd.Run()
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+
+// 	cmd = exec.Command("git", "push")
+// 	cmd.Dir = ""
+// 	err = cmd.Run()
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// }
 
 func convertLexicons() {
 	// TO-DO: Convert the downloaded lexicon json files to Kotlin data classes
