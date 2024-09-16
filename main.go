@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -232,6 +233,29 @@ func mapJSONTypeToKotlin(jsonType string) string {
 }
 
 func convertLexicons() error {
+	lexiconsDir := filepath.Join(repoDir, "lexicons")
+	outputDir := "/lexsync/generated-kotlin"
+
+	if err := os.MkdirAll(outputDir, 0755); err != nil {
+		return err
+	}
+
+	files, err := os.ReadDir(lexiconsDir)
+	if err != nil {
+		return err
+	}
+
+	for _, file := range files {
+		if !file.IsDir() && strings.HasSuffix(file.Name(), ".json") {
+			jsonFilePath := filepath.Join(lexiconsDir, file.Name())
+			if err := convertJSONToKotlin(jsonFilePath, outputDir); err != nil {
+				log.Printf("Error converting %s: %v", file.Name(), err)
+			} else {
+				fmt.Printf("Converted %s\n", file.Name())
+			}
+		}
+	}
+
 	return nil
 }
 
