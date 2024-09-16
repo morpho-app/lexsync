@@ -73,6 +73,25 @@ func main() {
 	}
 }
 
+func getLatestCommitSha() (string, error) {
+	resp, err := http.Get(fmt.Sprintf("https://api.github.com/repos/%s/%s/commits?path=%s", owner, repoName, "lexicons"))
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	var commits []Commit
+	if err := json.NewDecoder(resp.Body).Decode(&commits); err != nil {
+		return "", err
+	}
+
+	if len(commits) == 0 {
+		return "", fmt.Errorf("no commits found for lexicons directory")
+	}
+
+	return commits[0].Sha, nil
+}
+
 func pullRepo() {
 	repoURL := repoLocation
 	destPath := "/lexsync/repo"
