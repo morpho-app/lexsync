@@ -207,6 +207,35 @@ func copyFile(src, dest string) error {
 	return os.WriteFile(dest, input, 0644)
 }
 
-func convertLexicons() {
-	// TO-DO: Convert the downloaded lexicon json files to Kotlin data classes
+// JSON -> Kotlin conversion logic
+
+func mapJSONTypeToKotlin(jsonType string) string {
+	switch jsonType {
+	case "string":
+		return "String"
+	case "number":
+		return "Double"
+	case "integer":
+		return "Int"
+	case "boolean":
+		return "Boolean"
+	case "array":
+		return "List<Any>"
+	case "object":
+		return "Map<String, Any>"
+	default:
+		return "Any"
+	}
+}
+
+func convertLexicons() error {
+	return nil
+}
+
+func convertJSONToKotlin() error {
+	return nil
+}
+
+func generateKotlinClass() error {
+	return nil
 }
