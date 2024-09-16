@@ -236,6 +236,20 @@ func convertJSONToKotlin() error {
 	return nil
 }
 
-func generateKotlinClass() error {
-	return nil
+func generateKotlinClass(className string, data map[string]interface{}) string {
+	var fields []string
+
+	if properties, ok := data["properties"].(map[string]interface{}); ok {
+		for propName, propValue := range properties {
+			propType := "Any"
+			if propMap, ok := propValue.(map[string]interface{}); ok {
+				if typeName, ok := propMap["type"].(string); ok {
+					propType = mapJSONTypeToKotlin(typeName)
+				}
+			}
+			fields = append(fields, fmt.Sprintf("    val %s: %s", propName, propType))
+		}
+	}
+
+	return fmt.Sprintf("data class %s(\n%s\n)", className, strings.Join(fields, ",\n"))
 }
