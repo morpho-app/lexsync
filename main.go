@@ -24,8 +24,8 @@ const (
 	repoName      = "atproto"
 	repoURL       = "https://github.com/bluesky-social/atproto.git"
 	repoDir       = "/tree/main/lexicons"
-	targetRepoURL = "https://github.com/morpho-app/Morpho.git"
-	targetRepoDir = "tbd"
+	targetRepoURL = "https://github.com/morpho-app/butterfly.git"
+	targetRepoDir = "/tree/lexicons/shared/src/commonMain/kotlin/com/morpho/butterfly/lexicons"
 )
 
 func main() {
@@ -51,10 +51,10 @@ func main() {
 				continue
 			}
 
-			if err := pushRepo(); err != nil {
-				log.Println("Error pushing to repository:", err)
-				continue
-			}
+			// if err := pushRepo(); err != nil {
+			// 	log.Println("Error pushing to repository:", err)
+			// 	continue
+			// }
 
 			lastCommitSha = latestCommitSha
 		} else {
