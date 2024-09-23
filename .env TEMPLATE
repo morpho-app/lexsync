@@ -1,0 +1,24 @@
+# GitHub token to authenticate API requests
+GITHUB_TOKEN=github_token_here
+
+# Repository details for the source (bluesky-social/atproto)
+GITHUB_OWNER=bluesky-social
+GITHUB_REPO_NAME=atproto
+GITHUB_REPO_URL=https://github.com/bluesky-social/atproto
+SYNC_PATH=lexicons
+
+# Local directory paths for cloning and working with the repositories
+GITHUB_REPO_DIR=/path/to/local/source_repo  # Change to actual path on your system
+
+# Repository details for the target repo
+GITHUB_TARGET_REPO_URL=https://github.com/username/target_repo
+GITHUB_TARGET_REPO_DIR=/path/to/local/target_repo  # Change to actual path on your system
+
+# Output directory for the generated Kotlin classes
+SYNC_OUTPUT_DIR=/path/to/generated-kotlin
+
+# Polling interval for checking updates in the source repo
+SYNC_POLL_INTERVAL=24h
+
+# Custom user-agent for requests
+USER_AGENT=lexsync/1.0
